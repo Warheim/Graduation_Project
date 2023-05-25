@@ -4,40 +4,65 @@ from orders.settings import USER_TYPE_CHOICES
 
 
 class User(AbstractUser):
-    pass
+    first_name = ''
+    last_name = ''
+    email = ''
+    type = ''
+    company = ''
+    position = ''
 
 
 class Shop(models.Model):
-    pass
+    user = ''
+    name = ''
+    url = ''
+    filename = ''
+    address = ''
+    order_accept_status = ''
 
 
 class Category(models.Model):
-    pass
+    name = ''
+    shops = ''
 
 
 class Product(models.Model):
-    pass
+    name = ''
+    category = ''
 
 
 class ProductInfo(models.Model):
-    pass
+    shop = ''
+    product = ''
+    model = ''
+    quantity = ''
+    price = ''
+    price_rrc = ''
 
 
 class Parameter(models.Model):
-    pass
+    name = ''
 
 
 class ProductParameter(models.Model):
-    pass
-
-
-class Order(models.Model):
-    pass
-
-
-class OrderProduct(models.Model):
-    pass
+    product_info = ''
+    parameter = ''
+    quantity = ''
 
 
 class Buyer(models.Model):
-    pass
+    user = ''
+    phone = ''
+    address = ''
+
+
+class Order(models.Model):
+    buyer = ''
+    date_time = ''
+    status = ''
+
+
+class OrderProduct(models.Model):
+    order = ''
+    product_info = ''
+    quantity = ''
