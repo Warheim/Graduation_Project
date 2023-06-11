@@ -1,6 +1,6 @@
 from django.db import models
 from django.contrib.auth.models import AbstractUser, UserManager
-from orders.settings import USER_TYPE_CHOICES
+from orders.settings import USER_TYPE_CHOICES, STATE_CHOICES
 
 
 class User(AbstractUser):
@@ -87,28 +87,68 @@ class ProductInfo(models.Model):
 
 
 class Parameter(models.Model):
-    name = ''
+    name = models.CharField(max_length=20, verbose_name='Параметр')
+
+    def __str__(self):
+        return f'{self.name}'
+
+    class Meta:
+        verbose_name = 'Название параметра'
+        verbose_name_plural = 'Список названий параметров'
+        ordering = ('name',)
 
 
 class ProductParameter(models.Model):
-    product_info = ''
-    parameter = ''
-    quantity = ''
+    product_info = models.ForeignKey(ProductInfo, on_delete=models.CASCADE, related_name='products_info')
+    parameter = models.ForeignKey(Parameter, on_delete=models.CASCADE, related_name='parameters')
+    value = models.CharField(max_length=50, verbose_name='Значение')
+
+    def __str__(self):
+        return f'{self.product_info.name} {self.parameter.name} {self.value}'
+
+    class Meta:
+        verbose_name = 'Параметр'
+        verbose_name_plural = 'Список параметров'
 
 
 class Buyer(models.Model):
-    user = ''
-    phone = ''
-    address = ''
+    user = models.OneToOneField(User, on_delete=models.CASCADE, verbose_name='Пользователь')
+    phone = models.CharField(max_length=20, verbose_name='Телефон')
+    address = models.CharField(max_length=50, verbose_name='Адрес')
+
+    def __str__(self):
+        return f'{self.phone} {self.address}'
+
+    class Meta:
+        verbose_name = 'Покупатель'
+        verbose_name_plural = 'Список покупателей'
+        ordering = ('-address',)
 
 
 class Order(models.Model):
-    buyer = ''
-    date_time = ''
-    status = ''
+    buyer = models.ForeignKey(Buyer, on_delete=models.CASCADE, related_name='buyers', verbose_name='Покупатель')
+    date_time = models.DateTimeField(auto_now_add=True, verbose_name='Дата и время заказа')
+    status = models.CharField(max_length=20, choices=STATE_CHOICES, verbose_name='Статус заказа')
+
+    def __str__(self):
+        return f'{self.date_time} {self.status}'
+
+    class Meta:
+        verbose_name = 'Заказ'
+        verbose_name_plural = 'Список заказов'
+        ordering = ('-date_time',)
 
 
 class OrderProduct(models.Model):
-    order = ''
-    product_info = ''
-    quantity = ''
+    order = models.ForeignKey(Order, on_delete=models.CASCADE, related_name='orders', verbose_name='Заказ')
+    product_info = models.ForeignKey(ProductInfo, on_delete=models.CASCADE, related_name='products_info',
+                                     verbose_name='Информация о товаре')
+    quantity = models.PositiveIntegerField(verbose_name='Количество')
+
+    def __str__(self):
+        return f'{self.product_info.name} {self.quantity}'
+
+    class Meta:
+        verbose_name = 'Заказ'
+        verbose_name_plural = 'Список заказов'
+        ordering = ('-date_time',)

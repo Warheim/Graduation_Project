@@ -133,3 +133,8 @@ USER_TYPE_CHOICES = (
     ('buyer', 'покупатель'),
     ('seller', 'продавец')
 )
+
+STATE_CHOICES = (
+    ('accepted', 'подтверждён'),
+    ('canceled', 'отменён')
+)
