@@ -1,6 +1,7 @@
 from django.db import models
 from django.contrib.auth.models import AbstractUser, UserManager
 from orders.settings import USER_TYPE_CHOICES, STATE_CHOICES
+import uuid
 
 
 class User(AbstractUser):
@@ -28,11 +29,11 @@ class User(AbstractUser):
 
 
 class Shop(models.Model):
-    user = models.OneToOneField(User, on_delete=models.CASCADE)
+    user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='shop')
     name = models.CharField(max_length=50, verbose_name='Название магазина')
-    url = models.URLField(blank=True)
-    address = models.CharField(max_length=150, blank=True)
-    order_accept_status = models.BooleanField(default=True)
+    url = models.URLField(blank=True, verbose_name='Ссылка')
+    address = models.CharField(max_length=150, blank=True, verbose_name='Адрес')
+    order_status = models.BooleanField(default=True, verbose_name='Статус заказа')
 
     def __str__(self):
         return f'{self.name}'
@@ -45,7 +46,7 @@ class Shop(models.Model):
 
 class Category(models.Model):
     name = models.CharField(max_length=30, verbose_name='Категория', unique=True)
-    shops = models.ManyToManyField(Shop, related_name='categories', blank=True)
+    shops = models.ManyToManyField(Shop, related_name='categories', verbose_name='Магазины', blank=True)
 
     def __str__(self):
         return f'{self.name}'
@@ -58,7 +59,7 @@ class Category(models.Model):
 
 class Product(models.Model):
     name = models.CharField(max_length=50, verbose_name='Товар')
-    category = models.ForeignKey(Category, on_delete=models.CASCADE, related_name='products')
+    category = models.ForeignKey(Category, on_delete=models.CASCADE, related_name='products', verbose_name='Категория')
 
     def __str__(self):
         return f'{self.name}'
@@ -70,12 +71,12 @@ class Product(models.Model):
 
 
 class ProductInfo(models.Model):
-    shop = models.ForeignKey(Shop, on_delete=models.CASCADE, related_name='shops')
-    product = models.ForeignKey(Product, on_delete=models.CASCADE, related_name='products')
+    shop = models.ForeignKey(Shop, on_delete=models.CASCADE, related_name='product_info', verbose_name='Магазин')
+    product = models.ForeignKey(Product, on_delete=models.CASCADE, related_name='product_info', verbose_name='Товар')
     model = models.CharField(max_length=20, verbose_name='Модель', blank=True)
-    quantity = models.PositiveIntegerField(verbose_name='Количество на складе')
-    price = models.DecimalField(decimal_places=2, verbose_name='Цена')
-    price_rrc = models.DecimalField(decimal_places=2, verbose_name='Рекомендуемая розничная цена')
+    quantity = models.PositiveIntegerField(verbose_name='Количество')
+    price = models.DecimalField(decimal_places=2, max_digits=20, verbose_name='Цена')
+    price_rrc = models.DecimalField(decimal_places=2, max_digits=20, verbose_name='Рекомендуемая розничная цена')
 
     def __str__(self):
         return f'{self.product.name} в магазине {self.shop.name}'
@@ -83,11 +84,11 @@ class ProductInfo(models.Model):
     class Meta:
         verbose_name = 'Информация о товаре'
         verbose_name_plural = 'Реестр информации о товарах'
-        ordering = ('name',)
+        ordering = ('product',)
 
 
 class Parameter(models.Model):
-    name = models.CharField(max_length=20, verbose_name='Параметр')
+    name = models.CharField(max_length=20, verbose_name='Название')
 
     def __str__(self):
         return f'{self.name}'
@@ -99,7 +100,7 @@ class Parameter(models.Model):
 
 
 class ProductParameter(models.Model):
-    product_info = models.ForeignKey(ProductInfo, on_delete=models.CASCADE, related_name='products_info')
+    product_info = models.ForeignKey(ProductInfo, on_delete=models.CASCADE, related_name='parameters')
     parameter = models.ForeignKey(Parameter, on_delete=models.CASCADE, related_name='parameters')
     value = models.CharField(max_length=50, verbose_name='Значение')
 
@@ -112,7 +113,7 @@ class ProductParameter(models.Model):
 
 
 class Buyer(models.Model):
-    user = models.OneToOneField(User, on_delete=models.CASCADE, verbose_name='Пользователь')
+    user = models.OneToOneField(User, on_delete=models.CASCADE, verbose_name='Пользователь', related_name='buyer')
     phone = models.CharField(max_length=20, verbose_name='Телефон')
     address = models.CharField(max_length=50, verbose_name='Адрес')
 
@@ -126,7 +127,7 @@ class Buyer(models.Model):
 
 
 class Order(models.Model):
-    buyer = models.ForeignKey(Buyer, on_delete=models.CASCADE, related_name='buyers', verbose_name='Покупатель')
+    buyer = models.ForeignKey(Buyer, on_delete=models.CASCADE, related_name='orders', verbose_name='Покупатель')
     date_time = models.DateTimeField(auto_now_add=True, verbose_name='Дата и время заказа')
     status = models.CharField(max_length=20, choices=STATE_CHOICES, verbose_name='Статус заказа')
 
@@ -140,8 +141,8 @@ class Order(models.Model):
 
 
 class OrderProduct(models.Model):
-    order = models.ForeignKey(Order, on_delete=models.CASCADE, related_name='orders', verbose_name='Заказ')
-    product_info = models.ForeignKey(ProductInfo, on_delete=models.CASCADE, related_name='products_info',
+    order = models.ForeignKey(Order, on_delete=models.CASCADE, related_name='order_products', verbose_name='Заказ')
+    product_info = models.ForeignKey(ProductInfo, on_delete=models.CASCADE, related_name='order_products',
                                      verbose_name='Информация о товаре')
     quantity = models.PositiveIntegerField(verbose_name='Количество')
 
@@ -149,6 +150,18 @@ class OrderProduct(models.Model):
         return f'{self.product_info.name} {self.quantity}'
 
     class Meta:
-        verbose_name = 'Заказ'
-        verbose_name_plural = 'Список заказов'
-        ordering = ('-date_time',)
+        verbose_name = 'Товары в заказе'
+        verbose_name_plural = 'Список товаров в заказах'
+
+
+class PasswordResetToken(models.Model):
+    user = models.OneToOneField(User, on_delete=models.CASCADE)
+    created_at = models.DateTimeField(auto_now_add=True)
+    token = models.UUIDField(default=uuid.uuid4)
+
+    class Meta:
+        verbose_name = 'Токен сброса пароля'
+        verbose_name_plural = 'Токены сброса пароля'
+
+    def __str__(self):
+        return f'Password reset token for user {self.user}'
