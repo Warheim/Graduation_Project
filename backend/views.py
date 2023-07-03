@@ -8,7 +8,7 @@ from yaml import load as load_yaml, Loader
 from backend.models import Shop, Category, ProductInfo, Product, Parameter, ProductParameter
 
 
-class PartnerUpdate(APIView):
+class ShopUpdate(APIView):
     """
     Класс для обновления прайса от поставщика
     """

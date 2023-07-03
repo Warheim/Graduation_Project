@@ -5,3 +5,4 @@ python-dotenv
 requests
 ujson
 pyyaml
+django-rest-passwordreset
