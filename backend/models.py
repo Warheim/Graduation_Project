@@ -5,7 +5,7 @@ import uuid
 
 
 class User(AbstractUser):
-    username = None
+
     first_name = models.CharField(max_length=30, verbose_name='Имя')
     last_name = models.CharField(max_length=30, verbose_name='Фамилия')
     email = models.EmailField(verbose_name='Электронная почта', unique=True)
@@ -105,7 +105,7 @@ class ProductParameter(models.Model):
     value = models.CharField(max_length=50, verbose_name='Значение')
 
     def __str__(self):
-        return f'{self.product_info.name} {self.parameter.name} {self.value}'
+        return f'{self.product_info.product.name} {self.parameter.name} {self.value}'
 
     class Meta:
         verbose_name = 'Параметр'
@@ -147,7 +147,7 @@ class OrderProduct(models.Model):
     quantity = models.PositiveIntegerField(verbose_name='Количество')
 
     def __str__(self):
-        return f'{self.product_info.name} {self.quantity}'
+        return f'{self.product_info.product.name} {self.quantity}'
 
     class Meta:
         verbose_name = 'Товары в заказе'
