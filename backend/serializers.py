@@ -1,87 +1,196 @@
 from rest_framework import serializers
 
-from backend.models import User, Shop, Buyer, Category, ProductInfo, Product, ProductParameter, Order, OrderProduct
-
-
-class BuyerSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = Buyer
-        fields = ('id', 'user', 'phone', 'address')
-        read_only_fields = ('id',)
-        extra_kwargs = {
-            'user': {'write_only': True}
-        }
+from backend.models import (Customer, Provider, Category,
+                            Characteristic, Order, OrderItem,
+                            Product, ProductCharacteristic,
+                            Catalog, User, CustomerInfo, Shop)
 
 
 class UserSerializer(serializers.ModelSerializer):
-    contacts = BuyerSerializer(read_only=True, many=True)
+    """
+    Serializer class to serialize user instances
+    """
+
+    password = serializers.CharField(write_only=True)
 
     class Meta:
         model = User
-        fields = ('id', 'first_name', 'last_name', 'email', 'company', 'position', 'contacts')
-        read_only_fields = ('id',)
+        fields = [
+            "id",
+            "email",
+            "password",
+            "username",
+            "company",
+            "position",
+            "type",
+            "is_staff",
+            "is_superuser",
+        ]
+        read_only_fields = ["is_staff", "is_superuser"]
 
 
-class CategorySerializer(serializers.ModelSerializer):
+class ProviderSerializer(serializers.ModelSerializer):
+    """
+    Serializer class to serialize supplier instances
+    """
+
+    url = serializers.CharField(required=False)
+    order_is_active = serializers.BooleanField(required=False)
+
     class Meta:
-        model = Category
-        fields = ('id', 'name',)
-        read_only_fields = ('id',)
+        model = Provider
+        fields = ["id", "user", "name", "url", "order_is_active"]
+
+
+class CustomerInfoSerializer(serializers.ModelSerializer):
+    """
+    Serializer class to serialize customer info instances
+    """
+
+    class Meta:
+        model = CustomerInfo
+        fields = ['id', 'customer_id', 'city', 'street', 'house',
+                  'structure', 'building', 'apartment', 'phone', ]
 
 
 class ShopSerializer(serializers.ModelSerializer):
+    """
+    Serializer class to serialize customer shop instances
+    """
+
     class Meta:
         model = Shop
-        fields = ('id', 'user', 'name', 'order_status',)
-        read_only_fields = ('id',)
+        fields = ["id", "name"]
+
+
+class CustomerSerializer(serializers.ModelSerializer):
+    """
+    Serializer class to serialize customer instances
+    """
+
+    customer_info = CustomerInfoSerializer(read_only=True, many=True)
+    shop = ShopSerializer(read_only=True, many=True)
+
+    class Meta:
+        model = Customer
+        fields = ["id", "user", "name", "customer_info", "shop"]
+
+
+class CategorySerializer(serializers.ModelSerializer):
+    """
+    Serializer class to serialize category instances
+    """
+
+    class Meta:
+        model = Category
+        fields = ["id", "name"]
 
 
 class ProductSerializer(serializers.ModelSerializer):
-    category = serializers.StringRelatedField()
+    """
+    Serializer class to serialize product instances
+    """
 
     class Meta:
         model = Product
-        fields = ('name', 'category',)
+        fields = ["id", "name", "category_id"]
 
 
-class ProductParameterSerializer(serializers.ModelSerializer):
-    parameter = serializers.StringRelatedField()
-
-    class Meta:
-        model = ProductParameter
-        fields = ('parameter', 'value',)
-
-
-class ProductInfoSerializer(serializers.ModelSerializer):
-    product = ProductSerializer(read_only=True)
-    product_parameters = ProductParameterSerializer(read_only=True, many=True)
+class CharacteristicSerializer(serializers.ModelSerializer):
+    """
+    Serializer class to serialize characteristic instances
+    """
 
     class Meta:
-        model = ProductInfo
-        fields = ('id', 'shop', 'product', 'model', 'quantity', 'price', 'price_rrc', 'product_parameters',)
-        read_only_fields = ('id',)
+        model = Characteristic
+        fields = ["id", "name"]
 
 
-class OrderProductSerializer(serializers.ModelSerializer):
+class ProductCharacteristicSerializer(serializers.ModelSerializer):
+    """
+    Serializer class to serialize product characteristic instances
+    """
+
     class Meta:
-        model = OrderProduct
-        fields = ('id', 'order', 'product_info', 'quantity',)
-        read_only_fields = ('id',)
-        extra_kwargs = {
-            'order': {'write_only': True}
-        }
+        model = ProductCharacteristic
+        fields = ["id", "catalog_id", "characteristic_id", "value"]
 
 
-class OrderItemCreateSerializer(OrderProductSerializer):
-    product_info = ProductInfoSerializer(read_only=True)
+class CatalogSerializer(serializers.ModelSerializer):
+    """
+    Serializer class to serialize catalog instances
+    """
+
+    product_characteristics = serializers.StringRelatedField(read_only=True, many=True)
+
+    class Meta:
+        model = Catalog
+        fields = [
+            "id",
+            "provider_id",
+            "product_id",
+            "article",
+            "purchase_price",
+            "retail_price",
+            "quantity",
+            "delivery_cost",
+            "product_characteristics",
+        ]
+
+
+class OrderItemSerializer(serializers.ModelSerializer):
+    """
+    Serializer class to serialize order position instances
+    """
+
+    catalog = CatalogSerializer(read_only=True)
+
+    class Meta:
+        model = OrderItem
+        fields = [
+            "id",
+            "order_id",
+            "catalog_id",
+            "quantity",
+            "catalog",
+        ]
+        read_only_fields = ["order_id", "catalog_id", "quantity"]
 
 
 class OrderSerializer(serializers.ModelSerializer):
-    ordered_items = OrderItemCreateSerializer(read_only=True, many=True)
-    buyer = BuyerSerializer(read_only=True)
-    total_sum = serializers.IntegerField()
+    """
+    Serializer class to serialize order instances
+    """
+
+    order_items = OrderItemSerializer(read_only=True, many=True)
 
     class Meta:
         model = Order
-        fields = ('id', 'ordered_items', 'status', 'date_time', 'total_sum', 'buyer',)
-        read_only_fields = ('id',)
+        fields = [
+            "id",
+            "customer_id",
+            "order_date",
+            "customer_info",
+            "total_quantity",
+            "total_price",
+            "order_status",
+            "delivery_info",
+            "order_items",
+        ]
+        read_only_fields = [
+            "order_date",
+            "total_quantity",
+            "total_price",
+            "order_status",
+        ]
+
+
+class OrderCreateSerializer(serializers.ModelSerializer):
+    """
+    Serializer class to serialize order instances upon create or update actions
+    """
+
+    class Meta:
+        model = Order
+        fields = ["id", "customer", "order_date", "delivery_info", "order_status"]
+        read_only_fields = ["order_date", "order_status"]
