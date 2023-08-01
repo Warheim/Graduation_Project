@@ -3,18 +3,7 @@ import uuid
 from django.contrib.auth.models import AbstractUser, UserManager
 from django.core.validators import MinValueValidator
 from django.db import models
-
-USER_TYPE_CHOICES = (
-    ('customer', 'покупатель'),
-    ('provider', 'поставщик'),
-    ('admin', 'админ'),
-)
-
-ORDER_CHOICES = (
-    ('saved', 'сохранен'),
-    ('cancelled', 'отменен'),
-    ('dellivered', 'доставлен'),
-)
+from orders.settings import USER_TYPE_CHOICES, STATE_CHOICES
 
 
 class User(AbstractUser):
@@ -241,7 +230,7 @@ class Order(models.Model):
         Customer, on_delete=models.CASCADE, related_name='orders'
     )
     order_date = models.DateTimeField(auto_now_add=True)
-    order_status = models.CharField(max_length=15, choices=ORDER_CHOICES, default='saved')
+    order_status = models.CharField(max_length=15, choices=STATE_CHOICES, default='saved')
     delivery_info = models.ForeignKey(
         CustomerInfo, on_delete=models.CASCADE, related_name='orders'
     )
