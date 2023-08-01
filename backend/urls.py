@@ -4,5 +4,5 @@ from backend.views import ShopUpdate
 
 app_name = 'backend'
 urlpatterns = [
-    path('update', ShopUpdate.as_view(), name='shop-update'),
+    path('shop/update', ShopUpdate.as_view(), name='shop-update'),
 ]
