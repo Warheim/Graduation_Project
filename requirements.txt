@@ -8,4 +8,8 @@ pyyaml
 django-rest-passwordreset
 celery
 django-filter
+redis
+django-etc
+etc
+
 

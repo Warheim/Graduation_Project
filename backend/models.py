@@ -210,7 +210,7 @@ class CustomerInfo(models.Model):
     Class to describe customer info for delivery
     """
     customer_id = models.ForeignKey(
-        Customer, on_delete=models.CASCADE, related_name='cart_positions'
+        Customer, on_delete=models.CASCADE, related_name='cart_positions',
     )
     city = models.CharField(max_length=50, null=True, blank=True)
     street = models.CharField(max_length=50, null=True, blank=True)
