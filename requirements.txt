@@ -6,3 +6,6 @@ requests
 ujson
 pyyaml
 django-rest-passwordreset
+celery
+django-filter
+
