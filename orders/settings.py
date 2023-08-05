@@ -39,13 +39,17 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-
-    'backend',
+    'django.contrib.sites',
     'rest_framework',
     'rest_framework.authtoken',
-    'django_rest_passwordreset',
     'django_filters',
-    'etc',
+    'backend',
+    'drf_spectacular',
+    'drf_spectacular_sidecar',
+    'allauth',
+    'allauth.account',
+    'allauth.socialaccount',
+    'allauth.socialaccount.providers.vk',
 ]
 
 MIDDLEWARE = [
