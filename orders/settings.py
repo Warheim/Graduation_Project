@@ -44,12 +44,6 @@ INSTALLED_APPS = [
     'rest_framework.authtoken',
     'django_filters',
     'backend',
-    'drf_spectacular',
-    'drf_spectacular_sidecar',
-    'allauth',
-    'allauth.account',
-    'allauth.socialaccount',
-    'allauth.socialaccount.providers.vk',
 ]
 
 MIDDLEWARE = [

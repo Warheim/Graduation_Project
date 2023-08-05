@@ -6,10 +6,7 @@ psycopg2-binary
 python-dotenv
 requests
 PyYAML
-django-allauth
 django-etc
 redis
 celery
-drf-spectacular
-drf-spectacular-sidecar
 gunicorn
