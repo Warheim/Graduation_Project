@@ -10,3 +10,4 @@ django-etc
 redis
 celery
 gunicorn
+gevent
