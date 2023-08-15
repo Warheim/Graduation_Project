@@ -1,46 +1,61 @@
 version: '3.8'
 
-services:
-  web:
-    build: .
-    volumes:
-      - .:/code
-    ports:
-      - 8888:8000
-    env_file:
-      - .env
-    depends_on:
-      - db
-    restart: always
-    networks:
-      - net-backend
-  db:
-    image: postgres:latest
-    volumes:
-      - postgres_data:/var/lib/postgresql/data/
-    ports:
-      - 6001:5432
-    env_file:
-      - .env
-    restart: always
-    networks:
-      - net-backend
-  cache:
-    image: redis:latest
-    depends_on:
-      - web
-      - db
-    restart: always
-    command: redis-server --save 20 1 --loglevel warning
-    volumes:
-      - cache:/data
-    networks:
-      - net-backend
-
 volumes:
-  postgres_data:
-  cache:
-    driver: local
+  pgdata:
+  nginx:
 
 networks:
-  net-backend:
+  order_network:
+
+services:
+  db:
+    image: postgres:latest
+    restart: unless-stopped
+    volumes:
+      - pgdata:/var/lib/postgresql/data/
+    env_file:
+      - ./.env
+    networks:
+      - order_network
+  django:
+    build: .
+    depends_on:
+      - db
+      - redis
+    restart: unless-stopped
+    env_file:
+      - ./.env
+    volumes:
+      - nginx:/code/nginx/
+    networks:
+      - order_network
+    entrypoint: /code/entrypoint.sh
+  nginx:
+    build:
+      dockerfile: Dockerfile.nginx
+    ports:
+      - "80:80"
+    volumes:
+      - nginx:/etc/nginx/conf.d/
+    depends_on:
+      - django
+    restart: unless-stopped
+    networks:
+      - order_network
+  redis:
+    image: redis:7.0.0-alpine3.15
+    depends_on:
+      - db
+    networks:
+      - order_network
+  celery:
+    build:
+      dockerfile: Dockerfile.celery
+    env_file:
+      - ./.env
+    depends_on:
+      - redis
+      - db
+      - django
+    networks:
+      - order_network

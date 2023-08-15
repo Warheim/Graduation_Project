@@ -1,19 +1,25 @@
 #!/bin/sh
 
-if [ "$DATABASE" = "goods_api" ]
-then
-    echo "Waiting for postgres..."
+sleep 10
 
-    while ! nc -z $SQL_HOST $SQL_PORT; do
-      sleep 0.1
-    done
-
-    echo "PostgreSQL started"
-fi
-
-python manage.py flush --no-input
+python manage.py makemigrations
+python manage.py makemigrations procurement_supply
 python manage.py migrate
-python manage.py runserver 0.0.0.0:8000 &
+python manage.py createcachetable
 
 
+if [ "$DJANGO_SUPERUSER_USERNAME" ]
+then
+    python manage.py createsuperuser \
+        --noinput \
+        --username $DJANGO_SUPERUSER_USERNAME \
+        --email $DJANGO_SUPERUSER_EMAIL \
+        --first_name $DJANGO_SUPERUSER_NAME \
+        --last_name $DJANGO_SUPERUSER_SURNAME \
+        --company $DJANGO_SUPERUSER_COMPANY \
+        --position $DJANGO_SUPERUSER_POSITION
+
+
+gunicorn order_service.wsgi:application --bind 0.0.0.0:8000
+fi
 exec "$@"
